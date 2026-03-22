@@ -1,0 +1,1042 @@
+{
+  "Version": 1,
+  "Hash": "P+08hljAJ1EC20njajE/PbVdCSP+1H0bQNrBEPpfhNU=",
+  "Source": "ChristinaTicketingSystem.Api",
+  "BasePath": "_content/ChristinaTicketingSystem.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "ChristinaTicketingSystem.Api\\wwwroot",
+      "Source": "ChristinaTicketingSystem.Api",
+      "ContentRoot": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\",
+      "BasePath": "_content/ChristinaTicketingSystem.Api",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\c85poq2k46-99ozpkkcjl.gz",
+      "SourceId": "ChristinaTicketingSystem.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\",
+      "BasePath": "_content/ChristinaTicketingSystem.Api",
+      "RelativePath": "js/app#[.{fingerprint=99ozpkkcjl}]?.js.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\js\\app.js",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "i8hv36e6uh",
+      "Integrity": "AoSdcEA4FFoDBNURHAcTjgDr8GA8E1tl55UgE0opfAk=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\js\\app.js"
+    },
+    {
+      "Identity": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\ou2bryo655-rcmyv3kauh.gz",
+      "SourceId": "ChristinaTicketingSystem.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\",
+      "BasePath": "_content/ChristinaTicketingSystem.Api",
+      "RelativePath": "index#[.{fingerprint=rcmyv3kauh}]?.html.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\index.html",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "ouz1b0vgx9",
+      "Integrity": "QLkovhLCJXHec6nvbwpWiAlD9/8UXccV7DSakcqv+2c=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\index.html"
+    },
+    {
+      "Identity": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\sfpnwwev3w-caun18as39.gz",
+      "SourceId": "ChristinaTicketingSystem.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\",
+      "BasePath": "_content/ChristinaTicketingSystem.Api",
+      "RelativePath": "css/site#[.{fingerprint=caun18as39}]?.css.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\css\\site.css",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "o1rtzjdo7h",
+      "Integrity": "LC0lJ0VhL/UQjXIBK84wNjGN/2+lhfe54vKGOrzMlO8=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\css\\site.css"
+    },
+    {
+      "Identity": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\css\\site.css",
+      "SourceId": "ChristinaTicketingSystem.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\",
+      "BasePath": "_content/ChristinaTicketingSystem.Api",
+      "RelativePath": "css/site#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "caun18as39",
+      "Integrity": "7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\site.css"
+    },
+    {
+      "Identity": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\index.html",
+      "SourceId": "ChristinaTicketingSystem.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\",
+      "BasePath": "_content/ChristinaTicketingSystem.Api",
+      "RelativePath": "index#[.{fingerprint}]?.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "rcmyv3kauh",
+      "Integrity": "VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\index.html"
+    },
+    {
+      "Identity": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\js\\app.js",
+      "SourceId": "ChristinaTicketingSystem.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\",
+      "BasePath": "_content/ChristinaTicketingSystem.Api",
+      "RelativePath": "js/app#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "99ozpkkcjl",
+      "Integrity": "c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\app.js"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "css/site.caun18as39.css",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\sfpnwwev3w-caun18as39.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000313381385"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3190"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"LC0lJ0VhL/UQjXIBK84wNjGN/2+lhfe54vKGOrzMlO8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "caun18as39"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.caun18as39.css",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\css\\site.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "14643"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "caun18as39"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.caun18as39.css.gz",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\sfpnwwev3w-caun18as39.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3190"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"LC0lJ0VhL/UQjXIBK84wNjGN/2+lhfe54vKGOrzMlO8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "caun18as39"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-LC0lJ0VhL/UQjXIBK84wNjGN/2+lhfe54vKGOrzMlO8="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.css",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\sfpnwwev3w-caun18as39.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000313381385"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3190"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"LC0lJ0VhL/UQjXIBK84wNjGN/2+lhfe54vKGOrzMlO8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.css",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\css\\site.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "14643"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-7KVzgDVeShDRNju1VP+O9gkKxnq/lskzExR4ogAdOok="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.css.gz",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\sfpnwwev3w-caun18as39.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3190"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"LC0lJ0VhL/UQjXIBK84wNjGN/2+lhfe54vKGOrzMlO8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-LC0lJ0VhL/UQjXIBK84wNjGN/2+lhfe54vKGOrzMlO8="
+        }
+      ]
+    },
+    {
+      "Route": "index.html",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\ou2bryo655-rcmyv3kauh.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000409500410"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2441"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QLkovhLCJXHec6nvbwpWiAlD9/8UXccV7DSakcqv+2c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA="
+        }
+      ]
+    },
+    {
+      "Route": "index.html",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\index.html",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12390"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA="
+        }
+      ]
+    },
+    {
+      "Route": "index.html.gz",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\ou2bryo655-rcmyv3kauh.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2441"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QLkovhLCJXHec6nvbwpWiAlD9/8UXccV7DSakcqv+2c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QLkovhLCJXHec6nvbwpWiAlD9/8UXccV7DSakcqv+2c="
+        }
+      ]
+    },
+    {
+      "Route": "index.rcmyv3kauh.html",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\ou2bryo655-rcmyv3kauh.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000409500410"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2441"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QLkovhLCJXHec6nvbwpWiAlD9/8UXccV7DSakcqv+2c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "rcmyv3kauh"
+        },
+        {
+          "Name": "label",
+          "Value": "index.html"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA="
+        }
+      ]
+    },
+    {
+      "Route": "index.rcmyv3kauh.html",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\index.html",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12390"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "rcmyv3kauh"
+        },
+        {
+          "Name": "label",
+          "Value": "index.html"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-VS8vpOZAUQq2lxgC8fahyF6pEmzRyz8V7F/tnFxyxnA="
+        }
+      ]
+    },
+    {
+      "Route": "index.rcmyv3kauh.html.gz",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\ou2bryo655-rcmyv3kauh.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2441"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QLkovhLCJXHec6nvbwpWiAlD9/8UXccV7DSakcqv+2c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "rcmyv3kauh"
+        },
+        {
+          "Name": "label",
+          "Value": "index.html.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-QLkovhLCJXHec6nvbwpWiAlD9/8UXccV7DSakcqv+2c="
+        }
+      ]
+    },
+    {
+      "Route": "js/app.99ozpkkcjl.js",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\c85poq2k46-99ozpkkcjl.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000211640212"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4724"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"AoSdcEA4FFoDBNURHAcTjgDr8GA8E1tl55UgE0opfAk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "99ozpkkcjl"
+        },
+        {
+          "Name": "label",
+          "Value": "js/app.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ="
+        }
+      ]
+    },
+    {
+      "Route": "js/app.99ozpkkcjl.js",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\js\\app.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "22499"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "99ozpkkcjl"
+        },
+        {
+          "Name": "label",
+          "Value": "js/app.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ="
+        }
+      ]
+    },
+    {
+      "Route": "js/app.99ozpkkcjl.js.gz",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\c85poq2k46-99ozpkkcjl.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4724"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"AoSdcEA4FFoDBNURHAcTjgDr8GA8E1tl55UgE0opfAk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "99ozpkkcjl"
+        },
+        {
+          "Name": "label",
+          "Value": "js/app.js.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-AoSdcEA4FFoDBNURHAcTjgDr8GA8E1tl55UgE0opfAk="
+        }
+      ]
+    },
+    {
+      "Route": "js/app.js",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\c85poq2k46-99ozpkkcjl.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000211640212"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4724"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"AoSdcEA4FFoDBNURHAcTjgDr8GA8E1tl55UgE0opfAk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ="
+        }
+      ]
+    },
+    {
+      "Route": "js/app.js",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\wwwroot\\js\\app.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "22499"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-c9FBupn/F0vYcVL1Cn/XJCbxTZzuRb7himMTyOmKdKQ="
+        }
+      ]
+    },
+    {
+      "Route": "js/app.js.gz",
+      "AssetFile": "C:\\ChristinaTicketingSystem\\ChristinaTicketingSystem.Api\\obj\\Debug\\net9.0\\compressed\\c85poq2k46-99ozpkkcjl.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4724"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"AoSdcEA4FFoDBNURHAcTjgDr8GA8E1tl55UgE0opfAk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 20 Mar 2026 05:54:14 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-AoSdcEA4FFoDBNURHAcTjgDr8GA8E1tl55UgE0opfAk="
+        }
+      ]
+    }
+  ]
+}

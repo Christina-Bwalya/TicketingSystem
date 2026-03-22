@@ -1,0 +1,139 @@
+{
+  "info": {
+    "name": "Christina Ticketing System",
+    "_postman_id": "c4a2d6a2-5c34-4d02-a6e6-6d1e5b49d9a6",
+    "description": "Beginner-friendly Ticketing API (CRUD + status change). Base URL is {{baseUrl}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "GET All Tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets"]
+            }
+          }
+        },
+        {
+          "name": "GET Ticket By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "POST Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Ticket from Postman\",\n  \"description\": \"Created via Postman\",\n  \"category\": \"Test\",\n  \"assignedTo\": \"Christina\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created (201)', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) {",
+                  "  pm.environment.set('id', String(json.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Update Ticket (full update)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"category\": \"Bug\",\n  \"assignedTo\": \"Christina\",\n  \"status\": \"InProgress\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Ticket Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Resolved\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/{{id}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "{{id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Ticket",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Tickets (filter by status)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets?status=Open",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets"],
+              "query": [
+                { "key": "status", "value": "Open" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Christina Ticketing System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="brand">
+                <span class="brand-mark">CTS</span>
+                <div class="brand-text">
+                    <h1>Christina Ticketing System</h1>
+                    <p id="dashboard-subtitle">Simple, radiant ticket management with a protected workspace</p>
+                </div>
+            </div>
+            <div id="session-panel" class="session-panel hidden">
+                <div class="session-copy">
+                    <span class="session-label">Signed in as</span>
+                    <strong id="session-user"></strong>
+                    <span id="session-role" class="session-role"></span>
+                </div>
+                <button id="logout-btn" class="btn ghost" type="button">Log Out</button>
+            </div>
+        </header>
+
+        <main>
+            <section id="login-view" class="auth-layout">
+                <article class="auth-card">
+                    <div class="auth-copy">
+                        <span class="eyebrow">Secure access</span>
+                        <h2>Log in to your ticket dashboard</h2>
+                        <p>Create your own account or use the seeded admin login, then manage support tickets inside the protected workspace.</p>
+                    </div>
+
+                    <div class="auth-toggle" role="tablist" aria-label="Authentication options">
+                        <button id="show-login-btn" class="auth-toggle-btn active" type="button" role="tab" aria-selected="true">Login</button>
+                        <button id="show-register-btn" class="auth-toggle-btn" type="button" role="tab" aria-selected="false">Register</button>
+                    </div>
+
+                    <form id="login-form" class="auth-form">
+                        <div class="field-row">
+                            <label for="username">Username</label>
+                            <input id="username" name="username" autocomplete="username" required />
+                        </div>
+                        <div class="field-row">
+                            <label for="password">Password</label>
+                            <input id="password" name="password" type="password" autocomplete="current-password" required />
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary">Log In</button>
+                        </div>
+                        <p id="login-message" class="form-message" aria-live="polite"></p>
+                    </form>
+
+                    <form id="register-form" class="auth-form hidden">
+                        <div class="field-row">
+                            <label for="register-username">Username</label>
+                            <input id="register-username" name="username" minlength="3" maxlength="50" autocomplete="username" required />
+                        </div>
+                        <div class="field-row">
+                            <label for="display-name">Display Name</label>
+                            <input id="display-name" name="displayName" minlength="2" maxlength="100" autocomplete="name" required />
+                        </div>
+                        <div class="field-row">
+                            <label for="register-password">Password</label>
+                            <input id="register-password" name="password" type="password" minlength="8" maxlength="100" autocomplete="new-password" required />
+                        </div>
+                        <div class="field-row">
+                            <label for="register-role">Role</label>
+                            <select id="register-role" name="role">
+                                <option value="Customer" selected>User / Customer</option>
+                                <option value="I.T">I.T</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary">Create Account</button>
+                        </div>
+                        <p id="register-message" class="form-message" aria-live="polite"></p>
+                    </form>
+                </article>
+            </section>
+
+            <section id="dashboard-view" class="app-main hidden">
+                <section class="ticket-form-card">
+                    <h2 id="ticket-form-title">Create Ticket</h2>
+                    <p id="ticket-form-intro" class="panel-copy">Submit a new ticket, set its priority, and track progress from your dashboard.</p>
+                    <form id="ticket-form">
+                        <div class="field-row">
+                            <label for="title">Title</label>
+                            <input id="title" name="title" maxlength="100" required />
+                        </div>
+                        <div class="field-row">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" rows="3" maxlength="1000" required></textarea>
+                        </div>
+                        <div class="field-row">
+                            <label for="category">Category</label>
+                            <input id="category" name="category" maxlength="50" required />
+                        </div>
+                        <div class="field-row staff-only-field">
+                            <label for="assignedTo">Assigned To (optional)</label>
+                            <input id="assignedTo" name="assignedTo" maxlength="100" />
+                        </div>
+                        <div class="field-row staff-only-field">
+                            <label for="dueDate">Due Date</label>
+                            <input id="dueDate" name="dueDate" type="date" />
+                        </div>
+                        <div class="field-row">
+                            <label for="priority">Priority</label>
+                            <select id="priority" name="priority">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="field-row">
+                            <label for="attachment">Attachment (optional)</label>
+                            <input
+                                id="attachment"
+                                name="attachment"
+                                type="file"
+                                accept=".png,.jpg,.jpeg,.gif,.bmp,.webp,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,image/*" />
+                            <small class="field-hint">Attach a screenshot or file for the incident. Maximum size: 10 MB.</small>
+                        </div>
+                        <div class="field-row admin-only-field">
+                            <label for="overview">Overview</label>
+                            <textarea id="overview" name="overview" rows="3" maxlength="1000"></textarea>
+                        </div>
+                        <div class="field-row admin-only-field">
+                            <label for="reviewNotes">Review Notes</label>
+                            <textarea id="reviewNotes" name="reviewNotes" rows="3" maxlength="1000"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary">Create Ticket</button>
+                            <button type="reset" class="btn ghost">Clear</button>
+                        </div>
+                        <p id="form-message" class="form-message" aria-live="polite"></p>
+                    </form>
+                </section>
+
+                <section class="tickets-list-card">
+                    <div class="list-header">
+                        <h2 id="tickets-list-title">Tickets</h2>
+                        <button id="refresh-btn" class="btn subtle" type="button">Refresh</button>
+                    </div>
+                    <p id="tickets-list-intro" class="panel-copy">View ticket progress and the latest updates here.</p>
+                    <div id="tickets-container" class="tickets-container">
+                        <!-- Tickets will be rendered here -->
+                    </div>
+                </section>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <span>Built with ASP.NET Core Web API for learning controllers, DTOs, CRUD, and basic authentication</span>
+        </footer>
+    </div>
+
+    <template id="ticket-card-template">
+        <article class="ticket-card">
+            <header class="ticket-card-header">
+                <div class="ticket-title-area">
+                    <span class="pill pill-category"></span>
+                    <h3 class="ticket-title"></h3>
+                </div>
+                <span class="pill pill-status"></span>
+            </header>
+            <p class="ticket-description"></p>
+            <dl class="ticket-meta">
+                <div>
+                    <dt>ID</dt>
+                    <dd class="ticket-id"></dd>
+                </div>
+                <div>
+                    <dt>Created</dt>
+                    <dd class="ticket-created"></dd>
+                </div>
+                <div>
+                    <dt>Assigned To</dt>
+                    <dd class="ticket-assigned"></dd>
+                </div>
+                <div>
+                    <dt>Requested By</dt>
+                    <dd class="ticket-requester"></dd>
+                </div>
+                <div>
+                    <dt>Due Date</dt>
+                    <dd class="ticket-due-date"></dd>
+                </div>
+                <div>
+                    <dt>Priority</dt>
+                    <dd class="ticket-priority"></dd>
+                </div>
+            </dl>
+            <section class="ticket-detail-block">
+                <h4>Attachment</h4>
+                <div class="ticket-attachment"></div>
+            </section>
+            <section class="ticket-admin-details hidden">
+                <div class="ticket-detail-block">
+                    <h4>Overview</h4>
+                    <p class="ticket-overview"></p>
+                </div>
+                <div class="ticket-detail-block">
+                    <h4>Review Notes</h4>
+                    <p class="ticket-review-notes"></p>
+                </div>
+                <div class="ticket-detail-block">
+                    <h4>Comments</h4>
+                    <div class="ticket-comments-list"></div>
+                </div>
+            </section>
+            <div class="ticket-actions">
+                <select class="status-select staff-only-control">
+                    <option value="Open">Open</option>
+                    <option value="InProgress">In Progress</option>
+                    <option value="WaitingForUser">Waiting for User</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                </select>
+                <input class="comment-input" type="text" maxlength="500" placeholder="Add a comment" />
+                <button class="btn tiny subtle add-comment-btn" type="button">Add Comment</button>
+                <button class="btn tiny update-status-btn staff-only-control" type="button">Update Status</button>
+                <button class="btn tiny danger delete-btn admin-only-control" type="button">Delete</button>
+            </div>
+        </article>
+    </template>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
