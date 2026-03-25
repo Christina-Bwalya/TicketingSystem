@@ -1,6 +1,85 @@
-@ChristinaTicketingSystem.Api_HostAddress = http://localhost:5097
+@host = http://localhost:5097
 
-GET {{ChristinaTicketingSystem.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Password123!"
+}
+
+###
+
+### Register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "displayName": "Test User",
+  "password": "Password123!",
+  "role": "Customer"
+}
+
+###
+
+### Logout (replace TOKEN)
+POST {{host}}/api/auth/logout
+Authorization: Bearer TOKEN
+
+###
+
+### Get all tickets (replace TOKEN)
+GET {{host}}/api/tickets
+Authorization: Bearer TOKEN
+
+###
+
+### Get tickets by status (replace TOKEN)
+GET {{host}}/api/tickets?status=Open
+Authorization: Bearer TOKEN
+
+###
+
+### Get ticket by ID (replace TOKEN)
+GET {{host}}/api/tickets/1
+Authorization: Bearer TOKEN
+
+###
+
+### Create ticket (replace TOKEN)
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{
+  "title": "My first ticket",
+  "description": "Something is broken",
+  "category": "Hardware",
+  "priority": "Medium"
+}
+
+###
+
+### Update ticket status (replace TOKEN)
+PATCH {{host}}/api/tickets/1/status
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{
+  "status": "InProgress"
+}
+
+###
+
+### Add comment (replace TOKEN)
+POST {{host}}/api/tickets/1/comments
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{
+  "message": "Looking into this now."
+}
 
 ###

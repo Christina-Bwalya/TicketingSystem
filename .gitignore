@@ -1,0 +1,32 @@
+## .NET build output
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+*.db
+*.db-shm
+*.db-wal
+
+## Logs
+*.log
+*.err
+run.log
+run.err
+api-run.log
+api-run.err.log
+api-restart.log
+api-restart.err.log
+
+## Secrets — never commit Development appsettings with real keys
+# appsettings.Development.json is intentionally excluded from source control
+appsettings.Development.json
+
+## Uploads (user-generated content)
+ChristinaTicketingSystem.Api/Uploads/
+
+## Build artifacts
+build-temp/
+build-verify/
+build-verify-*/
+artifacts/

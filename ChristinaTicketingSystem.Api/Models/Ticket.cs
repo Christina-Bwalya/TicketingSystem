@@ -1,4 +1,5 @@
-using System.ComponentModel.DataAnnotations;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace ChristinaTicketingSystem.Api.Models;
 
@@ -19,36 +20,85 @@ public enum TicketPriority
     Critical = 3
 }
 
-public class Ticket
+[Table("tickets")]
+public class Ticket : BaseModel
 {
+    [PrimaryKey("id", false)]
     public int Id { get; set; }
+
+    [Column("title")]
     public string Title { get; set; } = string.Empty;
+
+    [Column("description")]
     public string Description { get; set; } = string.Empty;
+
+    [Column("category")]
     public string Category { get; set; } = string.Empty;
+
+    [Column("created_by_username")]
     public string CreatedByUsername { get; set; } = string.Empty;
+
+    [Column("created_by_display_name")]
     public string CreatedByDisplayName { get; set; } = string.Empty;
+
+    [Column("created_by_role")]
     public string CreatedByRole { get; set; } = "Customer";
-    public TicketStatus Status { get; set; } = TicketStatus.Open;
-    public TicketPriority Priority { get; set; } = TicketPriority.Medium;
+
+    [Column("status")]
+    public int Status { get; set; } = (int)TicketStatus.Open;
+
+    [Column("priority")]
+    public int Priority { get; set; } = (int)TicketPriority.Medium;
+
+    [Column("created_date")]
     public DateTime CreatedDate { get; set; }
+
+    [Column("due_date")]
     public DateTime? DueDate { get; set; }
+
+    [Column("assigned_to")]
     public string? AssignedTo { get; set; }
+
+    [Column("overview")]
     public string? Overview { get; set; }
+
+    [Column("review_notes")]
     public string? ReviewNotes { get; set; }
+
+    [Column("attachment_file_name")]
     public string? AttachmentFileName { get; set; }
+
+    [Column("attachment_stored_file_name")]
     public string? AttachmentStoredFileName { get; set; }
+
+    [Column("attachment_content_type")]
     public string? AttachmentContentType { get; set; }
+
+    [Column("attachment_relative_path")]
     public string? AttachmentRelativePath { get; set; }
+
+    // Not mapped — loaded separately
     public List<TicketComment> Comments { get; set; } = [];
+
+    public TicketStatus TicketStatus => (TicketStatus)Status;
+    public TicketPriority TicketPriority => (TicketPriority)Priority;
 }
 
-public class TicketComment
+[Table("ticket_comments")]
+public class TicketComment : BaseModel
 {
+    [PrimaryKey("id", false)]
     public int Id { get; set; }
+
+    [Column("ticket_id")]
     public int TicketId { get; set; }
-    [MaxLength(100)]
+
+    [Column("author_name")]
     public string AuthorName { get; set; } = string.Empty;
-    [MaxLength(500)]
+
+    [Column("message")]
     public string Message { get; set; } = string.Empty;
+
+    [Column("created_date")]
     public DateTime CreatedDate { get; set; }
 }

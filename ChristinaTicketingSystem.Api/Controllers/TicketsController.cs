@@ -3,7 +3,6 @@ using ChristinaTicketingSystem.Api.Models;
 using ChristinaTicketingSystem.Api.Models.Dtos;
 using ChristinaTicketingSystem.Api.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.StaticFiles;
 
 namespace ChristinaTicketingSystem.Api.Controllers;
@@ -13,93 +12,88 @@ namespace ChristinaTicketingSystem.Api.Controllers;
 public class TicketsController : ControllerBase
 {
     private const long MaxAttachmentBytes = 10 * 1024 * 1024;
+    private const string BearerScheme = "Bearer ";
+    private static readonly string UploadsFolder = Path.Combine("Uploads", "tickets");
+
     private static readonly HashSet<string> AllowedAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".bmp",
-        ".webp",
-        ".pdf",
-        ".txt",
-        ".csv",
-        ".doc",
-        ".docx",
-        ".xls",
-        ".xlsx"
+        ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp",
+        ".pdf", ".txt", ".csv", ".doc", ".docx", ".xls", ".xlsx"
     };
 
     private readonly AuthSessionStore _sessionStore;
-    private readonly AppDbContext _dbContext;
+    private readonly SupabaseService _supabase;
     private readonly IWebHostEnvironment _environment;
+    private readonly ILogger<TicketsController> _logger;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
     public TicketsController(
         AuthSessionStore sessionStore,
-        AppDbContext dbContext,
-        IWebHostEnvironment environment)
+        SupabaseService supabase,
+        IWebHostEnvironment environment,
+        ILogger<TicketsController> logger)
     {
         _sessionStore = sessionStore;
-        _dbContext = dbContext;
+        _supabase = supabase;
         _environment = environment;
+        _logger = logger;
     }
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<TicketReadDto>>> GetAll([FromQuery] TicketStatus? status)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
 
-        var query = _dbContext.Tickets
-            .Include(ticket => ticket.Comments)
-            .AsQueryable();
+        Supabase.Postgrest.Interfaces.IPostgrestTable<Ticket> ticketQuery = _supabase.Client.From<Ticket>();
 
         if (status.HasValue)
-        {
-            query = query.Where(ticket => ticket.Status == status.Value);
-        }
+            ticketQuery = ticketQuery.Filter("status", Supabase.Postgrest.Constants.Operator.Equals, (int)status.Value);
 
-        var tickets = await query
-            .OrderByDescending(ticket => ticket.CreatedDate)
-            .ToListAsync();
+        var ticketsResult = await ticketQuery.Get();
+        var tickets = ticketsResult.Models;
 
-        var visibleTickets = tickets
-            .Where(ticket => CanAccessTicket(session!, ticket))
+        if (tickets.Count == 0)
+            return Ok(Array.Empty<TicketReadDto>());
+
+        // Load comments filtered by ticket IDs using in operator
+        var ticketIds = tickets.Select(t => t.Id.ToString()).ToArray();
+        var commentsResult = await _supabase.Client
+            .From<TicketComment>()
+            .Filter("ticket_id", Supabase.Postgrest.Constants.Operator.In, ticketIds)
+            .Get();
+
+        var commentsByTicket = commentsResult.Models
+            .GroupBy(c => c.TicketId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var ticket in tickets)
+            ticket.Comments = commentsByTicket.TryGetValue(ticket.Id, out var comments) ? comments : [];
+
+        var visible = tickets
+            .Where(t => CanAccessTicket(session!, t))
+            .OrderByDescending(t => t.CreatedDate)
             .Select(ToReadDto)
             .ToList();
 
-        return Ok(visibleTickets);
+        return Ok(visible);
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TicketReadDto>> GetById(int id)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
 
-        var ticket = await _dbContext.Tickets
-            .Include(t => t.Comments)
-            .SingleOrDefaultAsync(t => t.Id == id);
-
-        if (ticket is null)
-        {
-            return NotFound();
-        }
-
-        if (!CanAccessTicket(session!, ticket))
-        {
-            return Forbid();
-        }
+        var ticket = await GetTicketWithCommentsAsync(id);
+        if (ticket is null) return NotFound();
+        if (!CanAccessTicket(session!, ticket)) return Forbid();
 
         return Ok(ToReadDto(ticket));
     }
@@ -107,6 +101,7 @@ public class TicketsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [Consumes("application/json")]
     public async Task<ActionResult<TicketReadDto>> CreateJson([FromBody] TicketCreateDto dto)
     {
@@ -116,6 +111,7 @@ public class TicketsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxAttachmentBytes + (1024 * 1024))]
     public async Task<ActionResult<TicketReadDto>> CreateWithAttachment([FromForm] TicketCreateDto dto)
@@ -126,31 +122,25 @@ public class TicketsController : ControllerBase
     private async Task<ActionResult<TicketReadDto>> CreateTicketAsync(TicketCreateDto dto, IFormFile? attachment)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
 
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var ticket = new Ticket
         {
-            Title = dto.Title,
-            Description = dto.Description,
-            Category = dto.Category,
+            Title = dto.Title.Trim(),
+            Description = dto.Description.Trim(),
+            Category = dto.Category.Trim(),
             CreatedByUsername = session!.Username,
             CreatedByDisplayName = session.DisplayName,
             CreatedByRole = session.Role,
-            AssignedTo = dto.AssignedTo,
-            Status = TicketStatus.Open,
-            Priority = dto.Priority,
+            AssignedTo = dto.AssignedTo?.Trim(),
+            Status = (int)TicketStatus.Open,
+            Priority = (int)dto.Priority,
             CreatedDate = DateTime.UtcNow,
             DueDate = CanManagePlanningFields(session) ? dto.DueDate : null,
-            Overview = IsAdmin(session) ? dto.Overview : null,
-            ReviewNotes = IsAdmin(session) ? dto.ReviewNotes : null
+            Overview = IsAdmin(session) ? dto.Overview?.Trim() : null,
+            ReviewNotes = IsAdmin(session) ? dto.ReviewNotes?.Trim() : null
         };
 
         if (attachment is not null)
@@ -161,49 +151,53 @@ public class TicketsController : ControllerBase
                 ModelState.AddModelError(nameof(dto.Attachment), validationMessage);
                 return ValidationProblem(ModelState);
             }
-
             await SaveAttachmentAsync(ticket, attachment);
         }
 
-        _dbContext.Tickets.Add(ticket);
-        await _dbContext.SaveChangesAsync();
+        var insertResult = await _supabase.Client.From<Ticket>().Insert(ticket);
+        var created = insertResult.Models.FirstOrDefault() ?? ticket;
+        created.Comments = [];
 
-        return CreatedAtAction(nameof(GetById), new { id = ticket.Id }, ToReadDto(ticket));
+        _logger.LogInformation("Ticket {TicketId} created by {Username}", created.Id, session.Username);
+
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, ToReadDto(created));
     }
 
     [HttpGet("{id:int}/attachment")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DownloadAttachment(int id)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
 
-        var ticket = await _dbContext.Tickets.SingleOrDefaultAsync(t => t.Id == id);
-        if (ticket is null)
-        {
-            return NotFound();
-        }
+        var ticket = await _supabase.Client.From<Ticket>()
+            .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, id)
+            .Single();
 
-        if (!CanAccessTicket(session!, ticket))
-        {
-            return Forbid();
-        }
+        if (ticket is null) return NotFound();
+        if (!CanAccessTicket(session!, ticket)) return Forbid();
 
         if (string.IsNullOrWhiteSpace(ticket.AttachmentRelativePath) ||
             string.IsNullOrWhiteSpace(ticket.AttachmentFileName))
+            return NotFound();
+
+        var absolutePath = Path.GetFullPath(
+            Path.Combine(_environment.ContentRootPath, ticket.AttachmentRelativePath));
+
+        // Path traversal protection — ensure resolved path is within uploads directory
+        var allowedRoot = Path.GetFullPath(
+            Path.Combine(_environment.ContentRootPath, UploadsFolder));
+
+        if (!absolutePath.StartsWith(allowedRoot, StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogWarning("Path traversal attempt detected for ticket {TicketId} by {Username}", id, session!.Username);
             return NotFound();
         }
 
-        var absolutePath = Path.Combine(_environment.ContentRootPath, ticket.AttachmentRelativePath);
-        if (!System.IO.File.Exists(absolutePath))
-        {
-            return NotFound();
-        }
+        if (!System.IO.File.Exists(absolutePath)) return NotFound();
 
         var contentType = string.IsNullOrWhiteSpace(ticket.AttachmentContentType)
             ? "application/octet-stream"
@@ -215,254 +209,212 @@ public class TicketsController : ControllerBase
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, [FromBody] TicketUpdateDto dto)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
+        if (!CanWorkTickets(session)) return Forbid();
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        if (!CanWorkTickets(session))
-        {
-            return Forbid();
-        }
+        var ticket = await GetTicketWithCommentsAsync(id);
+        if (ticket is null) return NotFound();
+        if (!CanAccessTicket(session!, ticket)) return Forbid();
 
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
-
-        var ticket = await _dbContext.Tickets
-            .Include(t => t.Comments)
-            .SingleOrDefaultAsync(t => t.Id == id);
-
-        if (ticket is null)
-        {
-            return NotFound();
-        }
-
-        if (!CanAccessTicket(session!, ticket))
-        {
-            return Forbid();
-        }
-
-        ticket.Title = dto.Title;
-        ticket.Description = dto.Description;
-        ticket.Category = dto.Category;
-        ticket.AssignedTo = dto.AssignedTo;
-        ticket.Status = dto.Status;
-        ticket.Priority = dto.Priority;
+        ticket.Title = dto.Title.Trim();
+        ticket.Description = dto.Description.Trim();
+        ticket.Category = dto.Category.Trim();
+        ticket.AssignedTo = dto.AssignedTo?.Trim();
+        ticket.Status = (int)dto.Status;
+        ticket.Priority = (int)dto.Priority;
         ticket.DueDate = dto.DueDate;
-        ticket.Overview = IsAdmin(session) ? dto.Overview : ticket.Overview;
-        ticket.ReviewNotes = IsAdmin(session) ? dto.ReviewNotes : ticket.ReviewNotes;
+        ticket.Overview = IsAdmin(session) ? dto.Overview?.Trim() : ticket.Overview;
+        ticket.ReviewNotes = IsAdmin(session) ? dto.ReviewNotes?.Trim() : ticket.ReviewNotes;
 
-        await _dbContext.SaveChangesAsync();
+        await _supabase.Client.From<Ticket>().Update(ticket);
+
+        _logger.LogInformation("Ticket {TicketId} updated by {Username}", id, session!.Username);
+
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
 
-        var ticket = await _dbContext.Tickets
-            .Include(t => t.Comments)
-            .SingleOrDefaultAsync(t => t.Id == id);
+        var ticket = await _supabase.Client.From<Ticket>()
+            .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, id)
+            .Single();
 
-        if (ticket is null)
-        {
-            return NotFound();
-        }
+        if (ticket is null) return NotFound();
+        if (!CanAccessTicket(session!, ticket) || !IsAdmin(session)) return Forbid();
 
-        if (!CanAccessTicket(session!, ticket) || !IsAdmin(session))
-        {
-            return Forbid();
-        }
+        // DB cascade delete handles ticket_comments automatically
+        await _supabase.Client.From<Ticket>()
+            .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, id)
+            .Delete();
 
-        _dbContext.Tickets.Remove(ticket);
-        await _dbContext.SaveChangesAsync();
+        _logger.LogInformation("Ticket {TicketId} deleted by {Username}", id, session!.Username);
+
         return NoContent();
     }
 
     [HttpPatch("{id:int}/status")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] TicketStatusUpdateDto dto)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
+        if (!CanWorkTickets(session)) return Forbid();
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        if (!CanWorkTickets(session))
-        {
-            return Forbid();
-        }
+        var ticket = await _supabase.Client.From<Ticket>()
+            .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, id)
+            .Single();
 
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
+        if (ticket is null) return NotFound();
+        if (!CanAccessTicket(session!, ticket)) return Forbid();
 
-        var ticket = await _dbContext.Tickets.SingleOrDefaultAsync(t => t.Id == id);
-        if (ticket is null)
-        {
-            return NotFound();
-        }
+        ticket.Status = (int)dto.Status;
+        await _supabase.Client.From<Ticket>().Update(ticket);
 
-        if (!CanAccessTicket(session!, ticket))
-        {
-            return Forbid();
-        }
-
-        ticket.Status = dto.Status;
-        await _dbContext.SaveChangesAsync();
         return NoContent();
     }
 
     [HttpPost("{id:int}/comments")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TicketReadDto>> AddComment(int id, [FromBody] TicketCommentCreateDto dto)
     {
         var unauthorized = EnsureAuthenticated(out var session);
-        if (unauthorized is not null)
-        {
-            return unauthorized;
-        }
+        if (unauthorized is not null) return unauthorized;
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        if (!ModelState.IsValid)
+        var trimmedMessage = dto.Message.Trim();
+        if (string.IsNullOrEmpty(trimmedMessage))
         {
+            ModelState.AddModelError(nameof(dto.Message), "Comment cannot be empty.");
             return ValidationProblem(ModelState);
         }
 
-        var ticket = await _dbContext.Tickets
-            .Include(t => t.Comments)
-            .SingleOrDefaultAsync(t => t.Id == id);
+        var ticket = await GetTicketWithCommentsAsync(id);
+        if (ticket is null) return NotFound();
+        if (!CanAccessTicket(session!, ticket)) return Forbid();
 
-        if (ticket is null)
+        await _supabase.Client.From<TicketComment>().Insert(new TicketComment
         {
-            return NotFound();
-        }
-
-        if (!CanAccessTicket(session!, ticket))
-        {
-            return Forbid();
-        }
-
-        ticket.Comments.Add(new TicketComment
-        {
-            TicketId = ticket.Id,
+            TicketId = id,
             AuthorName = session!.DisplayName,
-            Message = dto.Message.Trim(),
+            Message = trimmedMessage,
             CreatedDate = DateTime.UtcNow
         });
 
-        await _dbContext.SaveChangesAsync();
-        return Ok(ToReadDto(ticket));
+        var updated = await GetTicketWithCommentsAsync(id);
+        return Ok(ToReadDto(updated!));
     }
 
-    private static TicketReadDto ToReadDto(Ticket ticket) =>
-        new()
-        {
-            Id = ticket.Id,
-            Title = ticket.Title,
-            Description = ticket.Description,
-            Category = ticket.Category,
-            CreatedByUsername = ticket.CreatedByUsername,
-            CreatedByDisplayName = ticket.CreatedByDisplayName,
-            CreatedByRole = ticket.CreatedByRole,
-            Status = ticket.Status,
-            Priority = ticket.Priority,
-            CreatedDate = ticket.CreatedDate,
-            DueDate = ticket.DueDate,
-            AssignedTo = ticket.AssignedTo,
-            Overview = ticket.Overview,
-            ReviewNotes = ticket.ReviewNotes,
-            HasAttachment = !string.IsNullOrWhiteSpace(ticket.AttachmentRelativePath),
-            AttachmentFileName = ticket.AttachmentFileName,
-            AttachmentContentType = ticket.AttachmentContentType,
-            AttachmentUrl = string.IsNullOrWhiteSpace(ticket.AttachmentRelativePath)
-                ? null
-                : $"/api/tickets/{ticket.Id}/attachment",
-            Comments = ticket.Comments
-                .Select(comment => new TicketCommentReadDto
-                {
-                    AuthorName = comment.AuthorName,
-                    Message = comment.Message,
-                    CreatedDate = comment.CreatedDate
-                })
-                .ToList()
-        };
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private async Task<Ticket?> GetTicketWithCommentsAsync(int id)
+    {
+        var ticket = await _supabase.Client.From<Ticket>()
+            .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, id)
+            .Single();
+
+        if (ticket is null) return null;
+
+        var commentsResult = await _supabase.Client
+            .From<TicketComment>()
+            .Filter("ticket_id", Supabase.Postgrest.Constants.Operator.Equals, id)
+            .Get();
+
+        ticket.Comments = commentsResult.Models;
+        return ticket;
+    }
+
+    private static TicketReadDto ToReadDto(Ticket ticket) => new()
+    {
+        Id = ticket.Id,
+        Title = ticket.Title,
+        Description = ticket.Description,
+        Category = ticket.Category,
+        CreatedByUsername = ticket.CreatedByUsername,
+        CreatedByDisplayName = ticket.CreatedByDisplayName,
+        CreatedByRole = ticket.CreatedByRole,
+        Status = ticket.TicketStatus,
+        Priority = ticket.TicketPriority,
+        CreatedDate = ticket.CreatedDate,
+        DueDate = ticket.DueDate,
+        AssignedTo = ticket.AssignedTo,
+        Overview = ticket.Overview,
+        ReviewNotes = ticket.ReviewNotes,
+        HasAttachment = !string.IsNullOrWhiteSpace(ticket.AttachmentRelativePath),
+        AttachmentFileName = ticket.AttachmentFileName,
+        AttachmentContentType = ticket.AttachmentContentType,
+        AttachmentUrl = string.IsNullOrWhiteSpace(ticket.AttachmentRelativePath)
+            ? null
+            : $"/api/tickets/{ticket.Id}/attachment",
+        Comments = ticket.Comments
+            .OrderBy(c => c.CreatedDate)
+            .Select(c => new TicketCommentReadDto
+            {
+                AuthorName = c.AuthorName,
+                Message = c.Message,
+                CreatedDate = c.CreatedDate
+            })
+            .ToList()
+    };
 
     private UnauthorizedObjectResult? EnsureAuthenticated(out AuthSession? session)
     {
         session = null;
-        var authorizationHeader = Request.Headers.Authorization.ToString();
-
-        if (authorizationHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        var header = Request.Headers.Authorization.ToString();
+        if (header.StartsWith(BearerScheme, StringComparison.OrdinalIgnoreCase))
         {
-            var token = authorizationHeader["Bearer ".Length..].Trim();
+            var token = header[BearerScheme.Length..].Trim();
             if (_sessionStore.TryGetValidSession(token, out session))
-            {
                 return null;
-            }
         }
-
         return Unauthorized(new { message = "Please log in to access tickets." });
     }
 
-    private static bool IsAdmin(AuthSession? session) =>
-        string.Equals(session?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+    private static bool IsAdmin(AuthSession? s) =>
+        string.Equals(s?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsIt(AuthSession? session) =>
-        string.Equals(session?.Role, "I.T", StringComparison.OrdinalIgnoreCase);
+    private static bool IsIt(AuthSession? s) =>
+        string.Equals(s?.Role, "I.T", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsCustomer(AuthSession? session) =>
-        !IsAdmin(session) && !IsIt(session);
-
-    private static bool CanWorkTickets(AuthSession? session) =>
-        IsAdmin(session) || IsIt(session);
-
-    private static bool CanManagePlanningFields(AuthSession? session) =>
-        IsAdmin(session) || IsIt(session);
+    private static bool CanWorkTickets(AuthSession? s) => IsAdmin(s) || IsIt(s);
+    private static bool CanManagePlanningFields(AuthSession? s) => IsAdmin(s) || IsIt(s);
 
     private static bool CanAccessTicket(AuthSession session, Ticket ticket) =>
         IsAdmin(session) ||
-        (IsIt(session) &&
-         (IsCustomerCreatedTicket(ticket) ||
-          IsAssignedToSession(session, ticket))) ||
+        (IsIt(session) && (IsCustomerCreatedTicket(ticket) || IsAssignedToSession(session, ticket))) ||
         string.Equals(ticket.CreatedByUsername, session.Username, StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsCustomerCreatedTicket(Ticket ticket)
-    {
-        if (string.IsNullOrWhiteSpace(ticket.CreatedByRole))
-        {
-            return true;
-        }
-
-        return !string.Equals(ticket.CreatedByRole, "Admin", StringComparison.OrdinalIgnoreCase) &&
-               !string.Equals(ticket.CreatedByRole, "I.T", StringComparison.OrdinalIgnoreCase);
-    }
+    private static bool IsCustomerCreatedTicket(Ticket ticket) =>
+        string.IsNullOrWhiteSpace(ticket.CreatedByRole) ||
+        (!string.Equals(ticket.CreatedByRole, "Admin", StringComparison.OrdinalIgnoreCase) &&
+         !string.Equals(ticket.CreatedByRole, "I.T", StringComparison.OrdinalIgnoreCase));
 
     private static bool IsAssignedToSession(AuthSession session, Ticket ticket)
     {
-        if (string.IsNullOrWhiteSpace(ticket.AssignedTo))
-        {
-            return false;
-        }
-
+        if (string.IsNullOrWhiteSpace(ticket.AssignedTo)) return false;
         var assignedTo = ticket.AssignedTo.Trim();
         return string.Equals(assignedTo, session.Username, StringComparison.OrdinalIgnoreCase) ||
                string.Equals(assignedTo, session.DisplayName, StringComparison.OrdinalIgnoreCase);
@@ -470,56 +422,40 @@ public class TicketsController : ControllerBase
 
     private static string? ValidateAttachment(IFormFile attachment)
     {
-        if (attachment.Length <= 0)
-        {
-            return "Attachment is empty.";
-        }
-
-        if (attachment.Length > MaxAttachmentBytes)
-        {
-            return "Attachment must be 10 MB or smaller.";
-        }
-
-        var extension = Path.GetExtension(attachment.FileName);
-        if (string.IsNullOrWhiteSpace(extension) || !AllowedAttachmentExtensions.Contains(extension))
-        {
-            return "Attachment type is not supported. Please upload an image, PDF, text, or Office document.";
-        }
-
+        if (attachment.Length <= 0) return "Attachment is empty.";
+        if (attachment.Length > MaxAttachmentBytes) return "Attachment must be 10 MB or smaller.";
+        var ext = Path.GetExtension(attachment.FileName);
+        if (string.IsNullOrWhiteSpace(ext) || !AllowedAttachmentExtensions.Contains(ext))
+            return "Attachment type is not supported.";
         return null;
     }
 
     private async Task SaveAttachmentAsync(Ticket ticket, IFormFile attachment)
     {
-        var uploadsDirectory = Path.Combine(_environment.ContentRootPath, "Uploads", "tickets");
-        Directory.CreateDirectory(uploadsDirectory);
+        var uploadsDir = Path.Combine(_environment.ContentRootPath, UploadsFolder);
+        Directory.CreateDirectory(uploadsDir);
 
-        var extension = Path.GetExtension(attachment.FileName);
-        var storedFileName = $"{Guid.NewGuid():N}{extension}";
-        var absolutePath = Path.Combine(uploadsDirectory, storedFileName);
+        var ext = Path.GetExtension(attachment.FileName);
+        var storedFileName = $"{Guid.NewGuid():N}{ext}";
+        var absolutePath = Path.Combine(uploadsDir, storedFileName);
 
         await using var stream = System.IO.File.Create(absolutePath);
         await attachment.CopyToAsync(stream);
 
-        var relativePath = Path.Combine("Uploads", "tickets", storedFileName);
         ticket.AttachmentFileName = Path.GetFileName(attachment.FileName);
         ticket.AttachmentStoredFileName = storedFileName;
-        ticket.AttachmentContentType = ResolveContentType(attachment, extension);
-        ticket.AttachmentRelativePath = relativePath;
+        ticket.AttachmentContentType = ResolveContentType(attachment, ext);
+        ticket.AttachmentRelativePath = Path.Combine(UploadsFolder, storedFileName);
     }
 
     private string ResolveContentType(IFormFile attachment, string extension)
     {
         if (!string.IsNullOrWhiteSpace(attachment.ContentType) &&
             !string.Equals(attachment.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase))
-        {
             return attachment.ContentType;
-        }
 
-        if (_contentTypeProvider.TryGetContentType($"file{extension}", out var resolvedContentType))
-        {
-            return resolvedContentType;
-        }
+        if (_contentTypeProvider.TryGetContentType($"file{extension}", out var resolved))
+            return resolved;
 
         return "application/octet-stream";
     }

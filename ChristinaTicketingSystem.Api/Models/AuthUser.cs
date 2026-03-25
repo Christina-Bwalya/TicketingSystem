@@ -1,16 +1,26 @@
-using System.ComponentModel.DataAnnotations;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace ChristinaTicketingSystem.Api.Models;
 
-public class AuthUser
+[Table("users")]
+public class AuthUser : BaseModel
 {
+    [PrimaryKey("id", false)]
     public int Id { get; set; }
-    [MaxLength(50)]
+
+    [Column("username")]
     public string Username { get; set; } = string.Empty;
-    [MaxLength(100)]
+
+    [Column("display_name")]
     public string DisplayName { get; set; } = string.Empty;
-    [MaxLength(20)]
+
+    [Column("role")]
     public string Role { get; set; } = "Customer";
+
+    [Column("password_hash")]
     public string PasswordHash { get; set; } = string.Empty;
+
+    [Column("created_at_utc")]
     public DateTime CreatedAtUtc { get; set; }
 }

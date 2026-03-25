@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\ChristinaTicketingSystem.Api.props" />
-</Project>

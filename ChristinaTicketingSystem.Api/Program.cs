@@ -2,25 +2,49 @@ using System.Text.Json.Serialization;
 using ChristinaTicketingSystem.Api.Data;
 using ChristinaTicketingSystem.Api.Models;
 using ChristinaTicketingSystem.Api.Services;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Features;
 
+// Railway injects PORT — bind to it if present
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls($"http://+:{port}");
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// ── Configuration ─────────────────────────────────────────────────────────
 builder.Services.Configure<AuthSettings>(
     builder.Configuration.GetSection(AuthSettings.SectionName));
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var supabaseUrl = builder.Configuration["Supabase:Url"]
+    ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+var supabaseKey = builder.Configuration["Supabase:ServiceRoleKey"]
+    ?? throw new InvalidOperationException("Supabase:ServiceRoleKey is not configured.");
+
+// ── Supabase ──────────────────────────────────────────────────────────────
+var supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, new Supabase.SupabaseOptions
+{
+    AutoConnectRealtime = false
+});
+await supabaseClient.InitializeAsync();
+
+// ── Services ──────────────────────────────────────────────────────────────
+builder.Services.AddSingleton(supabaseClient);
+builder.Services.AddSingleton<SupabaseService>();
 builder.Services.AddSingleton<PasswordService>();
-builder.Services.AddScoped<AuthUserStore>();
 builder.Services.AddSingleton<AuthSessionStore>();
+builder.Services.AddScoped<AuthUserStore>();
 builder.Services.AddScoped<DatabaseSeeder>();
+
+// Global request size limit (11 MB — attachments are max 10 MB + overhead)
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 11 * 1024 * 1024;
+});
+
+builder.Services.AddOpenApi();
+
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
@@ -30,24 +54,21 @@ builder.Services
 
 var app = builder.Build();
 
+// ── Database Seeding ──────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.InitializeAsync();
 }
 
-// Configure the HTTP request pipeline.
+// ── Middleware ────────────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-// For this beginner-friendly API+UI, keep everything on HTTP.
-// If you later add HTTPS, re-enable UseHttpsRedirection here.
-
 app.UseDefaultFiles();
 app.UseStaticFiles();
-
 app.MapControllers();
 
 app.Run();
