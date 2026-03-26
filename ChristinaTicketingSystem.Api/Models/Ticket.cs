@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
@@ -77,7 +78,8 @@ public class Ticket : BaseModel
     [Column("attachment_relative_path")]
     public string? AttachmentRelativePath { get; set; }
 
-    // Not mapped — loaded separately
+    // Not mapped — loaded separately, excluded from Supabase serialization
+    [JsonIgnore]
     public List<TicketComment> Comments { get; set; } = [];
 
     public TicketStatus TicketStatus => (TicketStatus)Status;
