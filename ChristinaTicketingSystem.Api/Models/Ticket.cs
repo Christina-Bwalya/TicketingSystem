@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
@@ -78,11 +77,17 @@ public class Ticket : BaseModel
     [Column("attachment_relative_path")]
     public string? AttachmentRelativePath { get; set; }
 
-    // Not mapped — loaded separately, excluded from Supabase serialization
-    [JsonIgnore]
+    // Not mapped — loaded separately, excluded from Supabase (Newtonsoft) and ASP.NET (STJ) serialization
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public List<TicketComment> Comments { get; set; } = [];
 
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public TicketStatus TicketStatus => (TicketStatus)Status;
+
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public TicketPriority TicketPriority => (TicketPriority)Priority;
 }
 
