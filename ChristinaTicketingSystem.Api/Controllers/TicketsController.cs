@@ -4,6 +4,7 @@ using ChristinaTicketingSystem.Api.Models.Dtos;
 using ChristinaTicketingSystem.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Options;
 
 namespace ChristinaTicketingSystem.Api.Controllers;
 
@@ -25,18 +26,24 @@ public class TicketsController : ControllerBase
     private readonly SupabaseService _supabase;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<TicketsController> _logger;
+    private readonly ExternalHelpdeskClient _helpdeskClient;
+    private readonly HelpdeskOptions _helpdeskOptions;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
     public TicketsController(
         AuthSessionStore sessionStore,
         SupabaseService supabase,
         IWebHostEnvironment environment,
-        ILogger<TicketsController> logger)
+        ILogger<TicketsController> logger,
+        ExternalHelpdeskClient helpdeskClient,
+        IOptions<HelpdeskOptions> helpdeskOptions)
     {
         _sessionStore = sessionStore;
         _supabase = supabase;
         _environment = environment;
         _logger = logger;
+        _helpdeskClient = helpdeskClient;
+        _helpdeskOptions = helpdeskOptions.Value;
     }
 
     [HttpGet]
@@ -160,6 +167,22 @@ public class TicketsController : ControllerBase
 
         _logger.LogInformation("Ticket {TicketId} created by {Username}", created.Id, session.Username);
 
+        // Fire-and-forget forward to external system if category matches
+        if (_helpdeskOptions.ForwardCategories.Contains(created.Category.ToUpperInvariant()))
+        {
+            _ = Task.Run(async () =>
+            {
+                var result = await _helpdeskClient.ForwardTicketAsync(created);
+                if (result.HasValue)
+                {
+                    created.ExternalTicketRef = result.Value.ExternalRef;
+                    created.ExternalCallbackUrl = result.Value.CallbackUrl;
+                    created.ExternalSource = "outbound";
+                    await _supabase.Client.From<Ticket>().Update(created);
+                }
+            });
+        }
+
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, ToReadDto(created));
     }
 
@@ -237,6 +260,10 @@ public class TicketsController : ControllerBase
 
         _logger.LogInformation("Ticket {TicketId} updated by {Username}", id, session!.Username);
 
+        // Push status update to external system if this ticket was forwarded
+        if (ticket.ExternalSource == "outbound")
+            _ = Task.Run(() => _helpdeskClient.PushStatusUpdateAsync(ticket, session.DisplayName));
+
         return NoContent();
     }
 
@@ -290,6 +317,10 @@ public class TicketsController : ControllerBase
         ticket.Status = (int)dto.Status;
         await _supabase.Client.From<Ticket>().Update(ticket);
 
+        // Push status update to external system if this ticket was forwarded
+        if (ticket.ExternalSource == "outbound")
+            _ = Task.Run(() => _helpdeskClient.PushStatusUpdateAsync(ticket, session!.DisplayName));
+
         return NoContent();
     }
 
@@ -325,6 +356,11 @@ public class TicketsController : ControllerBase
         });
 
         var updated = await GetTicketWithCommentsAsync(id);
+
+        // Push comment to external system if this ticket was forwarded
+        if (ticket.ExternalSource == "outbound")
+            _ = Task.Run(() => _helpdeskClient.PushCommentAsync(ticket, trimmedMessage, session!.DisplayName));
+
         return Ok(ToReadDto(updated!));
     }
 

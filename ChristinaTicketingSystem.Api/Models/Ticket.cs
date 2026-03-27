@@ -77,6 +77,16 @@ public class Ticket : BaseModel
     [Column("attachment_relative_path")]
     public string? AttachmentRelativePath { get; set; }
 
+    // Integration columns
+    [Column("external_ticket_ref")]
+    public string? ExternalTicketRef { get; set; }
+
+    [Column("external_callback_url")]
+    public string? ExternalCallbackUrl { get; set; }
+
+    [Column("external_source")]
+    public string? ExternalSource { get; set; }
+
     // Not mapped — loaded separately, excluded from Supabase (Newtonsoft) and ASP.NET (STJ) serialization
     [Newtonsoft.Json.JsonIgnore]
     [System.Text.Json.Serialization.JsonIgnore]

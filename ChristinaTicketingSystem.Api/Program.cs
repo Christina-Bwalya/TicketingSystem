@@ -3,7 +3,6 @@ using ChristinaTicketingSystem.Api.Data;
 using ChristinaTicketingSystem.Api.Models;
 using ChristinaTicketingSystem.Api.Services;
 using Microsoft.AspNetCore.Http.Features;
-
 // Railway injects PORT — bind to it if present
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +15,9 @@ builder.Logging.AddDebug();
 // ── Configuration ─────────────────────────────────────────────────────────
 builder.Services.Configure<AuthSettings>(
     builder.Configuration.GetSection(AuthSettings.SectionName));
+
+builder.Services.Configure<HelpdeskOptions>(
+    builder.Configuration.GetSection(HelpdeskOptions.SectionName));
 
 var supabaseUrl = builder.Configuration["Supabase:Url"]
     ?? throw new InvalidOperationException("Supabase:Url is not configured.");
@@ -36,6 +38,13 @@ builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddSingleton<AuthSessionStore>();
 builder.Services.AddScoped<AuthUserStore>();
 builder.Services.AddScoped<DatabaseSeeder>();
+
+// External helpdesk integration
+builder.Services.AddHttpClient<ExternalHelpdeskClient>(client =>
+{
+    var timeout = builder.Configuration.GetValue<int>("ExternalHelpdesk:TimeoutSeconds", 10);
+    client.Timeout = TimeSpan.FromSeconds(timeout);
+});
 
 // Global request size limit (11 MB — attachments are max 10 MB + overhead)
 builder.Services.Configure<FormOptions>(options =>
