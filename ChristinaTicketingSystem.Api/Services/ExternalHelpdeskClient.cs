@@ -59,17 +59,31 @@ public class ExternalHelpdeskClient
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Forward ticket {TicketId} failed: {Status}", ticket.Id, response.StatusCode);
+                var errorBody = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Forward ticket {TicketId} failed: {Status} | Response: {Body}", ticket.Id, response.StatusCode, errorBody);
                 return null;
             }
 
             var body = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<JsonElement>(body);
 
-            var externalRef = result.GetProperty("externalTicketRef").GetString() ?? string.Empty;
-            var callbackUrl = result.GetProperty("callbackUrl").GetString() ?? string.Empty;
+            // Their response shape: { "externalTicketRef": "...", "status": "OPEN", "callbackUrl": "..." }
+            string externalRef;
+            string callbackUrl;
 
-            _logger.LogInformation("Ticket {TicketId} forwarded → external ref {ExternalRef}", ticket.Id, externalRef);
+            if (result.TryGetProperty("externalTicketRef", out var refProp))
+                externalRef = refProp.GetString() ?? string.Empty;
+            else if (result.TryGetProperty("ticketNumber", out var numProp))
+                externalRef = numProp.GetString() ?? string.Empty;
+            else
+                externalRef = $"EXT-{ticket.Id}";
+
+            if (result.TryGetProperty("callbackUrl", out var cbProp))
+                callbackUrl = cbProp.GetString() ?? string.Empty;
+            else
+                callbackUrl = string.Empty;
+
+            _logger.LogInformation("Ticket {TicketId} forwarded → external ref {ExternalRef} | body: {Body}", ticket.Id, externalRef, body);
             return (externalRef, callbackUrl);
         }
         catch (Exception ex)

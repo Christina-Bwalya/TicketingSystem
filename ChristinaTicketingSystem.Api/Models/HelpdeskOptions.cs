@@ -19,11 +19,11 @@ public class HelpdeskOptions
     /// <summary>Timeout in seconds for outbound HTTP calls</summary>
     public int TimeoutSeconds { get; set; } = 10;
 
-    /// <summary>Categories we forward to the external system</summary>
+    /// <summary>Categories we forward to the external system (they handle these)</summary>
     public HashSet<string> ForwardCategories { get; set; } =
-        new(StringComparer.OrdinalIgnoreCase) { "NETWORK", "ACCOUNT", "ACCESS" };
-
-    /// <summary>Categories we accept from the external system</summary>
-    public HashSet<string> InboundCategories { get; set; } =
         new(StringComparer.OrdinalIgnoreCase) { "HARDWARE", "SOFTWARE", "OTHER" };
+
+    /// <summary>Categories we accept from the external system (we handle these)</summary>
+    public HashSet<string> InboundCategories { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase) { "NETWORK", "ACCOUNT", "ACCESS" };
 }
