@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ChristinaTicketingSystem.Api.Models;
@@ -16,7 +15,7 @@ public class ExternalHelpdeskClient
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
     public ExternalHelpdeskClient(
@@ -30,61 +29,42 @@ public class ExternalHelpdeskClient
     }
 
     /// <summary>
-    /// Forward a ticket to the external system. Returns their ticket ref and callback URL, or null on failure.
-    /// Never throws — failures are logged and swallowed.
+    /// Forward a ticket to the external system.
+    /// Returns their external_id, or null on failure. Never throws.
     /// </summary>
-    public async Task<(string ExternalRef, string CallbackUrl)?> ForwardTicketAsync(Ticket ticket)
+    public async Task<string?> ForwardTicketAsync(Ticket ticket)
     {
         var payload = new OutboundTicketPayload
         {
-            ExternalTicketRef = $"TKT-{ticket.Id}",
+            ExternalId = $"TKT-{ticket.Id}",
             Title = ticket.Title,
             Description = ticket.Description,
-            Category = ticket.Category.ToUpperInvariant(),
+            Category = ticket.Category,
             Priority = MapPriorityOutbound(ticket.TicketPriority),
-            SubmittedBy = new SubmittedByDto
-            {
-                FullName = ticket.CreatedByDisplayName,
-                Email = $"{ticket.CreatedByUsername}@internal"
-            },
-            CreatedAt = ticket.CreatedDate
+            CreatedBy = ticket.CreatedByUsername,
+            CreatedDate = ticket.CreatedDate
         };
 
         try
         {
-            var response = await SendAsync(
-                HttpMethod.Post,
-                "/api/integration/tickets/inbound",
-                payload);
+            var response = await SendAsync(HttpMethod.Post, "/api/integration/tickets/inbound", payload);
+            var body = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorBody = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Forward ticket {TicketId} failed: {Status} | Response: {Body}", ticket.Id, response.StatusCode, errorBody);
+                _logger.LogWarning("Forward ticket {TicketId} failed: {Status} | {Body}", ticket.Id, response.StatusCode, body);
                 return null;
             }
 
-            var body = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<JsonElement>(body);
 
-            // Their response shape: { "externalTicketRef": "...", "status": "OPEN", "callbackUrl": "..." }
-            string externalRef;
-            string callbackUrl;
+            // Their response: { "external_id": "their-ref" }
+            var externalId = result.TryGetProperty("external_id", out var prop)
+                ? prop.GetString()
+                : null;
 
-            if (result.TryGetProperty("externalTicketRef", out var refProp))
-                externalRef = refProp.GetString() ?? string.Empty;
-            else if (result.TryGetProperty("ticketNumber", out var numProp))
-                externalRef = numProp.GetString() ?? string.Empty;
-            else
-                externalRef = $"EXT-{ticket.Id}";
-
-            if (result.TryGetProperty("callbackUrl", out var cbProp))
-                callbackUrl = cbProp.GetString() ?? string.Empty;
-            else
-                callbackUrl = string.Empty;
-
-            _logger.LogInformation("Ticket {TicketId} forwarded → external ref {ExternalRef} | body: {Body}", ticket.Id, externalRef, body);
-            return (externalRef, callbackUrl);
+            _logger.LogInformation("Ticket {TicketId} forwarded → their ref: {ExternalId}", ticket.Id, externalId);
+            return externalId;
         }
         catch (Exception ex)
         {
@@ -94,25 +74,27 @@ public class ExternalHelpdeskClient
     }
 
     /// <summary>Push a status update to the external system for a forwarded ticket.</summary>
-    public async Task PushStatusUpdateAsync(Ticket ticket, string updatedByName)
+    public async Task PushStatusUpdateAsync(Ticket ticket, string updatedBy)
     {
-        if (string.IsNullOrWhiteSpace(ticket.ExternalCallbackUrl)) return;
+        if (string.IsNullOrWhiteSpace(ticket.ExternalTicketRef)) return;
 
         var payload = new OutboundStatusUpdatePayload
         {
-            Status = MapStatusOutbound(ticket.TicketStatus),
-            UpdatedBy = new UpdatedByDto { FullName = updatedByName, Email = $"{updatedByName}@internal" },
+            NewStatus = MapStatusOutbound(ticket.TicketStatus),
+            UpdatedBy = updatedBy,
             Timestamp = DateTime.UtcNow
         };
 
         try
         {
-            // callbackUrl is their full URL e.g. https://their-system/api/integration/tickets/EXT-123
-            var url = ticket.ExternalCallbackUrl.TrimEnd('/') + "/status";
-            var response = await SendToAbsoluteUrlAsync(HttpMethod.Patch, url, payload);
+            var path = $"/api/integration/tickets/{ticket.ExternalTicketRef}/status";
+            var response = await SendAsync(HttpMethod.Patch, path, payload);
 
             if (!response.IsSuccessStatusCode)
-                _logger.LogWarning("Push status for ticket {TicketId} failed: {Status}", ticket.Id, response.StatusCode);
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Push status for ticket {TicketId} failed: {Status} | {Body}", ticket.Id, response.StatusCode, body);
+            }
         }
         catch (Exception ex)
         {
@@ -123,23 +105,25 @@ public class ExternalHelpdeskClient
     /// <summary>Push a comment to the external system for a forwarded ticket.</summary>
     public async Task PushCommentAsync(Ticket ticket, string message, string authorName)
     {
-        if (string.IsNullOrWhiteSpace(ticket.ExternalCallbackUrl)) return;
+        if (string.IsNullOrWhiteSpace(ticket.ExternalTicketRef)) return;
 
         var payload = new OutboundCommentPayload
         {
-            Message = message,
-            IsInternal = false,
-            Author = new AuthorDto { FullName = authorName, Email = $"{authorName}@internal" },
+            CommentAuthor = authorName,
+            CommentMessage = message,
             Timestamp = DateTime.UtcNow
         };
 
         try
         {
-            var url = ticket.ExternalCallbackUrl.TrimEnd('/') + "/comments";
-            var response = await SendToAbsoluteUrlAsync(HttpMethod.Post, url, payload);
+            var path = $"/api/integration/tickets/{ticket.ExternalTicketRef}/comments";
+            var response = await SendAsync(HttpMethod.Post, path, payload);
 
             if (!response.IsSuccessStatusCode)
-                _logger.LogWarning("Push comment for ticket {TicketId} failed: {Status}", ticket.Id, response.StatusCode);
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Push comment for ticket {TicketId} failed: {Status} | {Body}", ticket.Id, response.StatusCode, body);
+            }
         }
         catch (Exception ex)
         {
@@ -152,45 +136,30 @@ public class ExternalHelpdeskClient
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, object payload)
     {
         var url = _options.BaseUrl.TrimEnd('/') + path;
-        return await SendToAbsoluteUrlAsync(method, url, payload);
-    }
-
-    private async Task<HttpResponseMessage> SendToAbsoluteUrlAsync(HttpMethod method, string url, object payload)
-    {
         var json = JsonSerializer.Serialize(payload, JsonOpts);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var request = new HttpRequestMessage(method, url) { Content = content };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
-        request.Headers.Add("X-Webhook-Signature", ComputeSignature(json, _options.WebhookSecret));
 
         return await _http.SendAsync(request);
     }
 
-    private static string ComputeSignature(string body, string secret)
-    {
-        var key = Encoding.UTF8.GetBytes(secret);
-        var data = Encoding.UTF8.GetBytes(body);
-        var hash = HMACSHA256.HashData(key, data);
-        return "sha256=" + Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
     private static string MapPriorityOutbound(TicketPriority priority) => priority switch
     {
-        TicketPriority.Low => "LOW",
-        TicketPriority.Medium => "MEDIUM",
-        TicketPriority.High => "HIGH",
-        TicketPriority.Critical => "CRITICAL",
-        _ => "MEDIUM"
+        TicketPriority.Low => "Low",
+        TicketPriority.High => "High",
+        TicketPriority.Critical => "Critical",
+        _ => "Medium"
     };
 
     private static string MapStatusOutbound(TicketStatus status) => status switch
     {
-        TicketStatus.Open => "OPEN",
-        TicketStatus.InProgress => "IN_PROGRESS",
-        TicketStatus.WaitingForUser => "IN_PROGRESS",
-        TicketStatus.Resolved => "RESOLVED",
-        TicketStatus.Closed => "CLOSED",
-        _ => "OPEN"
+        TicketStatus.Open => "open",
+        TicketStatus.InProgress => "in_progress",
+        TicketStatus.WaitingForUser => "in_progress",
+        TicketStatus.Resolved => "resolved",
+        TicketStatus.Closed => "closed",
+        _ => "open"
     };
 }

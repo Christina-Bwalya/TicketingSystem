@@ -168,15 +168,15 @@ public class TicketsController : ControllerBase
         _logger.LogInformation("Ticket {TicketId} created by {Username}", created.Id, session.Username);
 
         // Fire-and-forget forward to external system if category matches
-        if (_helpdeskOptions.ForwardCategories.Contains(created.Category.ToUpperInvariant()))
+        if (_helpdeskOptions.ForwardCategories.Contains(created.Category))
         {
             _ = Task.Run(async () =>
             {
-                var result = await _helpdeskClient.ForwardTicketAsync(created);
-                if (result.HasValue)
+                var externalId = await _helpdeskClient.ForwardTicketAsync(created);
+                if (externalId is not null)
                 {
-                    created.ExternalTicketRef = result.Value.ExternalRef;
-                    created.ExternalCallbackUrl = result.Value.CallbackUrl;
+                    created.ExternalTicketRef = externalId;
+                    created.ExternalCallbackUrl = $"{_helpdeskOptions.BaseUrl.TrimEnd('/')}/api/integration/tickets/{externalId}";
                     created.ExternalSource = "outbound";
                     await _supabase.Client.From<Ticket>().Update(created);
                 }

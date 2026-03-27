@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ChristinaTicketingSystem.Api.Models.Dtos;
 
@@ -6,107 +7,122 @@ namespace ChristinaTicketingSystem.Api.Models.Dtos;
 
 public class OutboundTicketPayload
 {
-    public string ExternalTicketRef { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty;
-    public string Priority { get; set; } = string.Empty;
-    public SubmittedByDto SubmittedBy { get; set; } = new();
-    public DateTime CreatedAt { get; set; }
-}
+    [JsonPropertyName("external_id")]
+    public string ExternalId { get; set; } = string.Empty;
 
-public class SubmittedByDto
-{
-    public string FullName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
+    [JsonPropertyName("title")]
+    public string Title { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
+
+    [JsonPropertyName("category")]
+    public string Category { get; set; } = string.Empty;
+
+    [JsonPropertyName("priority")]
+    public string Priority { get; set; } = string.Empty;
+
+    [JsonPropertyName("created_by")]
+    public string CreatedBy { get; set; } = string.Empty;
+
+    [JsonPropertyName("created_date")]
+    public DateTime CreatedDate { get; set; }
 }
 
 // ── Outbound: status update we push to them ──
 
 public class OutboundStatusUpdatePayload
 {
-    public string Status { get; set; } = string.Empty;
-    public UpdatedByDto UpdatedBy { get; set; } = new();
-    public DateTime Timestamp { get; set; }
-}
+    [JsonPropertyName("new_status")]
+    public string NewStatus { get; set; } = string.Empty;
 
-public class UpdatedByDto
-{
-    public string FullName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
+    [JsonPropertyName("updated_by")]
+    public string UpdatedBy { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public DateTime Timestamp { get; set; }
 }
 
 // ── Outbound: comment we push to them ──
 
 public class OutboundCommentPayload
 {
-    public string Message { get; set; } = string.Empty;
-    public bool IsInternal { get; set; } = false;
-    public AuthorDto Author { get; set; } = new();
-    public DateTime Timestamp { get; set; }
-}
+    [JsonPropertyName("comment_author")]
+    public string CommentAuthor { get; set; } = string.Empty;
 
-public class AuthorDto
-{
-    public string FullName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
+    [JsonPropertyName("comment_message")]
+    public string CommentMessage { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public DateTime Timestamp { get; set; }
 }
 
 // ── Inbound: ticket they forward to us ──
 
 public class InboundTicketPayload
 {
-    [Required] public string ExternalTicketRef { get; set; } = string.Empty;
-    [Required] public string Title { get; set; } = string.Empty;
-    [Required] public string Description { get; set; } = string.Empty;
-    [Required] public string Category { get; set; } = string.Empty;
-    [Required] public string Priority { get; set; } = string.Empty;
-    [Required] public InboundSubmittedByDto SubmittedBy { get; set; } = new();
-    [Required] public DateTime CreatedAt { get; set; }
-}
+    [Required]
+    [JsonPropertyName("external_id")]
+    public string ExternalId { get; set; } = string.Empty;
 
-public class InboundSubmittedByDto
-{
-    [Required] public string FullName { get; set; } = string.Empty;
-    [Required] public string Email { get; set; } = string.Empty;
+    [Required]
+    [JsonPropertyName("title")]
+    public string Title { get; set; } = string.Empty;
+
+    [Required]
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    [JsonPropertyName("category")]
+    public string Category { get; set; } = string.Empty;
+
+    [Required]
+    [JsonPropertyName("priority")]
+    public string Priority { get; set; } = string.Empty;
+
+    [JsonPropertyName("created_by")]
+    public string CreatedBy { get; set; } = string.Empty;
+
+    [JsonPropertyName("created_date")]
+    public DateTime CreatedDate { get; set; }
 }
 
 // ── Inbound: status update they push to us ──
 
 public class InboundStatusUpdatePayload
 {
-    [Required] public string Status { get; set; } = string.Empty;
-    [Required] public InboundUpdatedByDto UpdatedBy { get; set; } = new();
-    [Required] public DateTime Timestamp { get; set; }
-}
+    [Required]
+    [JsonPropertyName("new_status")]
+    public string NewStatus { get; set; } = string.Empty;
 
-public class InboundUpdatedByDto
-{
-    [Required] public string FullName { get; set; } = string.Empty;
-    [Required] public string Email { get; set; } = string.Empty;
+    [JsonPropertyName("updated_by")]
+    public string? UpdatedBy { get; set; }
+
+    [JsonPropertyName("timestamp")]
+    public DateTime? Timestamp { get; set; }
 }
 
 // ── Inbound: comment they push to us ──
 
 public class InboundCommentPayload
 {
-    [Required] public string Message { get; set; } = string.Empty;
-    public bool IsInternal { get; set; } = false;
-    [Required] public InboundAuthorDto Author { get; set; } = new();
-    [Required] public DateTime Timestamp { get; set; }
-}
+    [Required]
+    [JsonPropertyName("comment_author")]
+    public string CommentAuthor { get; set; } = string.Empty;
 
-public class InboundAuthorDto
-{
-    [Required] public string FullName { get; set; } = string.Empty;
-    [Required] public string Email { get; set; } = string.Empty;
+    [Required]
+    [JsonPropertyName("comment_message")]
+    public string CommentMessage { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public DateTime? Timestamp { get; set; }
 }
 
 // ── Response: what we return when they create a ticket with us ──
 
 public class InboundTicketResponse
 {
-    public string TicketNumber { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public string CallbackUrl { get; set; } = string.Empty;
+    [JsonPropertyName("external_id")]
+    public string ExternalId { get; set; } = string.Empty;
 }

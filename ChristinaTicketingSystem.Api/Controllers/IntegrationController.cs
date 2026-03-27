@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using ChristinaTicketingSystem.Api.Data;
 using ChristinaTicketingSystem.Api.Models;
 using ChristinaTicketingSystem.Api.Models.Dtos;
@@ -35,10 +33,10 @@ public class IntegrationController : ControllerBase
     public async Task<ActionResult<InboundTicketResponse>> ReceiveInboundTicket(
         [FromBody] InboundTicketPayload dto)
     {
-        if (!await VerifySignatureAsync()) return Unauthorized();
+        if (!ValidateApiKey()) return Unauthorized(new { error = "Invalid or missing API key." });
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        var category = dto.Category.Trim().ToUpperInvariant();
+        var category = dto.Category.Trim();
         if (!_options.InboundCategories.Contains(category))
             return BadRequest(new { error = $"Category '{dto.Category}' is not handled by this system. Valid: {string.Join(", ", _options.InboundCategories)}" });
 
@@ -47,29 +45,24 @@ public class IntegrationController : ControllerBase
             Title = dto.Title.Trim(),
             Description = dto.Description.Trim(),
             Category = category,
-            CreatedByUsername = dto.SubmittedBy.Email,
-            CreatedByDisplayName = dto.SubmittedBy.FullName,
+            CreatedByUsername = dto.CreatedBy,
+            CreatedByDisplayName = dto.CreatedBy,
             CreatedByRole = "Customer",
             Status = (int)TicketStatus.Open,
             Priority = (int)MapPriorityInbound(dto.Priority),
-            CreatedDate = dto.CreatedAt,
-            ExternalTicketRef = dto.ExternalTicketRef,
+            CreatedDate = dto.CreatedDate == default ? DateTime.UtcNow : dto.CreatedDate,
+            ExternalTicketRef = dto.ExternalId,
             ExternalSource = "inbound"
         };
 
         var result = await _supabase.Client.From<Ticket>().Insert(ticket);
         var created = result.Models.FirstOrDefault() ?? ticket;
 
-        var baseUrl = $"{Request.Scheme}://{Request.Host}";
-        var callbackUrl = $"{baseUrl}/api/integration/tickets/TKT-{created.Id}";
+        _logger.LogInformation("Inbound ticket TKT-{Id} created from external ref {Ref}", created.Id, dto.ExternalId);
 
-        _logger.LogInformation("Inbound ticket TKT-{Id} created from external ref {Ref}", created.Id, dto.ExternalTicketRef);
-
-        return Created(callbackUrl, new InboundTicketResponse
+        return Created(string.Empty, new InboundTicketResponse
         {
-            TicketNumber = $"TKT-{created.Id}",
-            Status = "OPEN",
-            CallbackUrl = callbackUrl
+            ExternalId = $"TKT-{created.Id}"
         });
     }
 
@@ -84,31 +77,31 @@ public class IntegrationController : ControllerBase
         string ticketNumber,
         [FromBody] InboundStatusUpdatePayload dto)
     {
-        if (!await VerifySignatureAsync()) return Unauthorized();
+        if (!ValidateApiKey()) return Unauthorized(new { error = "Invalid or missing API key." });
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var ticket = await FindByTicketNumberAsync(ticketNumber);
         if (ticket is null) return NotFound(new { error = $"Ticket {ticketNumber} not found." });
 
-        var mapped = MapStatusInbound(dto.Status);
+        var mapped = MapStatusInbound(dto.NewStatus);
         if (mapped is null)
         {
-            _logger.LogWarning("Unknown inbound status '{Status}' for ticket {TicketNumber}", dto.Status, ticketNumber);
-            return BadRequest(new { error = $"Unknown status value '{dto.Status}'." });
+            _logger.LogWarning("Unknown inbound status '{Status}' for ticket {TicketNumber}", dto.NewStatus, ticketNumber);
+            return BadRequest(new { error = $"Unknown status value '{dto.NewStatus}'. Valid: open, in_progress, resolved, closed" });
         }
 
         ticket.Status = (int)mapped.Value;
         await _supabase.Client.From<Ticket>().Update(ticket);
 
-        _logger.LogInformation("Ticket {TicketNumber} status updated to {Status} by external system", ticketNumber, dto.Status);
+        _logger.LogInformation("Ticket {TicketNumber} status updated to {Status} by external system", ticketNumber, dto.NewStatus);
 
-        return Ok(new { ticketNumber, status = dto.Status.ToUpperInvariant() });
+        return Ok(new { message = "Update applied." });
     }
 
     // ── 3. External system pushes a comment ──────────────────────────────
 
     [HttpPost("tickets/{ticketNumber}/comments")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -116,7 +109,7 @@ public class IntegrationController : ControllerBase
         string ticketNumber,
         [FromBody] InboundCommentPayload dto)
     {
-        if (!await VerifySignatureAsync()) return Unauthorized();
+        if (!ValidateApiKey()) return Unauthorized(new { error = "Invalid or missing API key." });
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var ticket = await FindByTicketNumberAsync(ticketNumber);
@@ -125,22 +118,16 @@ public class IntegrationController : ControllerBase
         var comment = new TicketComment
         {
             TicketId = ticket.Id,
-            AuthorName = $"{dto.Author.FullName} (External)",
-            Message = dto.Message.Trim(),
-            CreatedDate = dto.Timestamp
+            AuthorName = $"{dto.CommentAuthor} (External)",
+            Message = dto.CommentMessage.Trim(),
+            CreatedDate = dto.Timestamp ?? DateTime.UtcNow
         };
 
-        var result = await _supabase.Client.From<TicketComment>().Insert(comment);
-        var created = result.Models.FirstOrDefault() ?? comment;
+        await _supabase.Client.From<TicketComment>().Insert(comment);
 
-        _logger.LogInformation("Comment added to ticket {TicketNumber} by external agent {Author}", ticketNumber, dto.Author.FullName);
+        _logger.LogInformation("Comment added to ticket {TicketNumber} by external agent {Author}", ticketNumber, dto.CommentAuthor);
 
-        return Created(string.Empty, new
-        {
-            commentId = created.Id.ToString(),
-            ticketNumber,
-            createdAt = created.CreatedDate
-        });
+        return Ok(new { message = "Update applied." });
     }
 
     // ── 4. External system fetches current ticket state ───────────────────
@@ -151,7 +138,7 @@ public class IntegrationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetTicket(string ticketNumber)
     {
-        if (!ValidateApiKey()) return Unauthorized();
+        if (!ValidateApiKey()) return Unauthorized(new { error = "Invalid or missing API key." });
 
         var ticket = await FindByTicketNumberAsync(ticketNumber);
         if (ticket is null) return NotFound(new { error = $"Ticket {ticketNumber} not found." });
@@ -162,7 +149,7 @@ public class IntegrationController : ControllerBase
             title = ticket.Title,
             description = ticket.Description,
             category = ticket.Category,
-            priority = ticket.TicketPriority.ToString().ToUpperInvariant(),
+            priority = MapPriorityOutbound(ticket.TicketPriority),
             status = MapStatusOutbound(ticket.TicketStatus),
             createdAt = ticket.CreatedDate,
             updatedAt = ticket.CreatedDate
@@ -173,7 +160,6 @@ public class IntegrationController : ControllerBase
 
     private async Task<Ticket?> FindByTicketNumberAsync(string ticketNumber)
     {
-        // ticketNumber format: TKT-{id}
         if (!ticketNumber.StartsWith("TKT-", StringComparison.OrdinalIgnoreCase) ||
             !int.TryParse(ticketNumber[4..], out var id))
             return null;
@@ -183,59 +169,46 @@ public class IntegrationController : ControllerBase
             .Single();
     }
 
-    private async Task<bool> VerifySignatureAsync()
-    {
-        // Also accept plain Bearer API key for GET requests
-        if (ValidateApiKey()) return true;
-
-        if (!Request.Headers.TryGetValue("X-Webhook-Signature", out var sigHeader))
-            return false;
-
-        Request.EnableBuffering();
-        using var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true);
-        var body = await reader.ReadToEndAsync();
-        Request.Body.Position = 0;
-
-        var key = Encoding.UTF8.GetBytes(_options.InboundSecret);
-        var data = Encoding.UTF8.GetBytes(body);
-        var expected = "sha256=" + Convert.ToHexString(HMACSHA256.HashData(key, data)).ToLowerInvariant();
-
-        return string.Equals(sigHeader.ToString(), expected, StringComparison.OrdinalIgnoreCase);
-    }
-
     private bool ValidateApiKey()
     {
         var header = Request.Headers.Authorization.ToString();
         if (!header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) return false;
         var key = header["Bearer ".Length..].Trim();
-        return string.Equals(key, _options.ApiKey, StringComparison.Ordinal);
+        return string.Equals(key, _options.InboundSecret, StringComparison.Ordinal);
     }
 
-    private static TicketPriority MapPriorityInbound(string priority) => priority.ToUpperInvariant() switch
+    private static TicketPriority MapPriorityInbound(string priority) => priority switch
     {
-        "LOW" => TicketPriority.Low,
-        "HIGH" => TicketPriority.High,
-        "CRITICAL" => TicketPriority.Critical,
+        "Low" => TicketPriority.Low,
+        "High" => TicketPriority.High,
+        "Critical" => TicketPriority.Critical,
         _ => TicketPriority.Medium
     };
 
-    private static TicketStatus? MapStatusInbound(string status) => status.ToUpperInvariant() switch
+    private static string MapPriorityOutbound(TicketPriority priority) => priority switch
     {
-        "OPEN" => TicketStatus.Open,
-        "ASSIGNED" => TicketStatus.InProgress,
-        "IN_PROGRESS" => TicketStatus.InProgress,
-        "RESOLVED" => TicketStatus.Resolved,
-        "CLOSED" => TicketStatus.Closed,
+        TicketPriority.Low => "Low",
+        TicketPriority.High => "High",
+        TicketPriority.Critical => "Critical",
+        _ => "Medium"
+    };
+
+    private static TicketStatus? MapStatusInbound(string status) => status.ToLowerInvariant() switch
+    {
+        "open" => TicketStatus.Open,
+        "in_progress" => TicketStatus.InProgress,
+        "resolved" => TicketStatus.Resolved,
+        "closed" => TicketStatus.Closed,
         _ => null
     };
 
     private static string MapStatusOutbound(TicketStatus status) => status switch
     {
-        TicketStatus.Open => "OPEN",
-        TicketStatus.InProgress => "IN_PROGRESS",
-        TicketStatus.WaitingForUser => "IN_PROGRESS",
-        TicketStatus.Resolved => "RESOLVED",
-        TicketStatus.Closed => "CLOSED",
-        _ => "OPEN"
+        TicketStatus.Open => "open",
+        TicketStatus.InProgress => "in_progress",
+        TicketStatus.WaitingForUser => "in_progress",
+        TicketStatus.Resolved => "resolved",
+        TicketStatus.Closed => "closed",
+        _ => "open"
     };
 }
