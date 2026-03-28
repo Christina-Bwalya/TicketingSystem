@@ -260,8 +260,8 @@ public class TicketsController : ControllerBase
 
         _logger.LogInformation("Ticket {TicketId} updated by {Username}", id, session!.Username);
 
-        // Push status update to external system if this ticket was forwarded
-        if (ticket.ExternalSource == "outbound")
+        // Push status update to external system for both outbound (we forwarded) and inbound (they sent us)
+        if (!string.IsNullOrWhiteSpace(ticket.ExternalTicketRef))
             _ = Task.Run(() => _helpdeskClient.PushStatusUpdateAsync(ticket, session.DisplayName));
 
         return NoContent();
@@ -317,8 +317,8 @@ public class TicketsController : ControllerBase
         ticket.Status = (int)dto.Status;
         await _supabase.Client.From<Ticket>().Update(ticket);
 
-        // Push status update to external system if this ticket was forwarded
-        if (ticket.ExternalSource == "outbound")
+        // Push status update to external system for both outbound and inbound tickets
+        if (!string.IsNullOrWhiteSpace(ticket.ExternalTicketRef))
             _ = Task.Run(() => _helpdeskClient.PushStatusUpdateAsync(ticket, session!.DisplayName));
 
         return NoContent();
@@ -357,8 +357,8 @@ public class TicketsController : ControllerBase
 
         var updated = await GetTicketWithCommentsAsync(id);
 
-        // Push comment to external system if this ticket was forwarded
-        if (ticket.ExternalSource == "outbound")
+        // Push comment to external system for both outbound and inbound tickets
+        if (!string.IsNullOrWhiteSpace(ticket.ExternalTicketRef))
             _ = Task.Run(() => _helpdeskClient.PushCommentAsync(ticket, trimmedMessage, session!.DisplayName));
 
         return Ok(ToReadDto(updated!));
