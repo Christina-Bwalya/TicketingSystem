@@ -563,6 +563,7 @@ loginForm.addEventListener("submit", async (event) => {
         setAuthenticatedUi(true);
         setFormMessage("", "");
         await loadTickets();
+        startAutoRefresh();
     } catch (error) {
         console.error(error);
         setLoginMessage(getFriendlyErrorMessage(error, "Login failed. Please check your username and password."), "error");
@@ -598,6 +599,7 @@ registerForm.addEventListener("submit", async (event) => {
         setAuthenticatedUi(true);
         setFormMessage("", "");
         await loadTickets();
+        startAutoRefresh();
     } catch (error) {
         console.error(error);
         setRegisterMessage(getFriendlyErrorMessage(error, "Could not create account. Try a different username or stronger password."), "error");
@@ -614,6 +616,7 @@ logoutBtn.addEventListener("click", async () => {
         console.error(error);
     } finally {
         clearSession();
+        stopAutoRefresh();
         setAuthenticatedUi(false);
         renderTickets([]);
         ticketForm.reset();
@@ -625,6 +628,24 @@ logoutBtn.addEventListener("click", async () => {
 setAuthenticatedUi(Boolean(currentSession));
 setAuthMode("login");
 
+// Auto-refresh tickets every 30 seconds to pick up external status updates
+let autoRefreshInterval = null;
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshInterval = setInterval(() => {
+        if (currentSession) loadTickets();
+    }, 30000);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
 if (currentSession) {
     loadTickets();
+    startAutoRefresh();
 }
